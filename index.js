@@ -14,8 +14,9 @@ const io = new Server(server, {
   },
 });
 
-// 1. World Map Database (Classified strictly by East vs West Longitude)
+// Expanded 40-Country Database (Divided by the Prime Meridian)
 const COUNTRY_DATABASE = [
+  // --- WESTERN HEMISPHERE ---
   { name: "United States", code: "us", side: "west" },
   { name: "Canada", code: "ca", side: "west" },
   { name: "Brazil", code: "br", side: "west" },
@@ -24,7 +25,20 @@ const COUNTRY_DATABASE = [
   { name: "Colombia", code: "co", side: "west" },
   { name: "Peru", code: "pe", side: "west" },
   { name: "Chile", code: "cl", side: "west" },
+  { name: "Venezuela", code: "ve", side: "west" },
+  { name: "Cuba", code: "cu", side: "west" },
+  { name: "Jamaica", code: "jm", side: "west" },
+  { name: "Portugal", code: "pt", side: "west" }, // Mostly West of Meridian
+  { name: "Morocco", code: "ma", side: "west" }, // West of Meridian
+  { name: "Iceland", code: "is", side: "west" },
+  { name: "Greenland", code: "gl", side: "west" },
+  { name: "New Zealand", code: "nz", side: "west" }, // Past 180 Line (Map Left representation)
+  { name: "Costa Rica", code: "cr", side: "west" },
+  { name: "Ecuador", code: "ec", side: "west" },
+  { name: "Guatemala", code: "gt", side: "west" },
+  { name: "Panama", code: "pa", side: "west" },
 
+  // --- EASTERN HEMISPHERE ---
   { name: "Iran", code: "ir", side: "east" },
   { name: "Japan", code: "jp", side: "east" },
   { name: "Australia", code: "au", side: "east" },
@@ -33,10 +47,22 @@ const COUNTRY_DATABASE = [
   { name: "India", code: "in", side: "east" },
   { name: "South Africa", code: "za", side: "east" },
   { name: "Saudi Arabia", code: "sa", side: "east" },
+  { name: "Russia", code: "ru", side: "east" },
+  { name: "South Korea", code: "kr", side: "east" },
+  { name: "Egypt", code: "eg", side: "east" },
+  { name: "Turkey", code: "tr", side: "east" },
+  { name: "Italy", code: "it", side: "east" },
+  { name: "United Kingdom", code: "gb", side: "east" }, // Greenwich is 0, mostly East/Center
+  { name: "Spain", code: "es", side: "east" },
+  { name: "Iraq", code: "iq", side: "east" },
+  { name: "Thailand", code: "th", side: "east" },
+  { name: "Indonesia", code: "id", side: "east" },
+  { name: "Vietnam", code: "vn", side: "east" },
+  { name: "Nigeria", code: "ng", side: "east" },
 ];
 
 const rooms = new Map();
-const PENALTY_COOLDOWN = 1000; // 1-second freeze for incorrect answers
+const PENALTY_COOLDOWN = 1000;
 
 function generateRandomFlags() {
   const shuffled = [...COUNTRY_DATABASE].sort(() => Math.random() - 0.5);
@@ -44,8 +70,6 @@ function generateRandomFlags() {
 }
 
 io.on("connection", (socket) => {
-  console.log(`Connected: ${socket.id}`);
-
   socket.on("create_room", (playerName) => {
     const roomId = Math.random().toString(36).substring(2, 7).toUpperCase();
     rooms.set(roomId, {
@@ -114,7 +138,6 @@ io.on("connection", (socket) => {
     });
   });
 
-  // Handle Drag & Drop side validation
   socket.on("flag_drop", ({ roomId, countryName, selectedSide }) => {
     const room = rooms.get(roomId);
     if (!room || !room.gameStarted) return;
@@ -130,7 +153,6 @@ io.on("connection", (socket) => {
     const matchedCountry = room.flags.find((c) => c.name === countryName);
     if (!matchedCountry) return;
 
-    // Validate Placement against the 'side' property (west vs east)
     if (matchedCountry.side === selectedSide) {
       if (!player.correctlySorted.includes(countryName)) {
         player.correctlySorted.push(countryName);
